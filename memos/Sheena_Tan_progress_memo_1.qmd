@@ -117,9 +117,9 @@ plot4 <- spotify_eda |> plot_stacked_bar(skip_2, key)
 plot5 <- spotify_eda |> plot_stacked_bar(skip_2, mode)
 plot6 <- spotify_eda |> plot_stacked_bar(skip_2, time_signature)
 
-(plot1 + plot2)
-(plot3 + plot4)
-(plot5 + plot6)
+plot1 + plot2
+plot3 + plot4
+plot5 + plot6
 
 ```
 

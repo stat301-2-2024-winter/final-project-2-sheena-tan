@@ -34,6 +34,9 @@ track_features <- read_csv(here("data/track_features.csv")) |>
   select(!c("flatness", "mechanism", "organism"))
 
 
+## join data ----
+spotify_data <- inner_join(session_logs, track_features, by = "track_id")
+
 
 ## inspect data ----
 session_logs |>
@@ -41,10 +44,6 @@ session_logs |>
 
 track_features |>
   skimr::skim()
-
-
-## join data ----
-spotify_data <- inner_join(session_logs, track_features, by = "track_id")
 
 spotify_data |>
   skimr::skim()
