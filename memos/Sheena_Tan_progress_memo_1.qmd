@@ -1,0 +1,152 @@
+---
+title: "Progress Memo 1"
+subtitle: |
+  | Spotify Sequential Skip Prediction
+  | Data Science 2 with R (STAT 301-2) Final Project
+author: "Sheena Tan"
+date: today
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    
+execute:
+  echo: false
+  warning: false
+
+from: markdown+emoji 
+reference-location: margin
+citation-location: margin
+---
+
+::: {.callout-tip icon=false}
+
+## Github Repo Link
+
+[https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan](https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan)
+
+:::
+
+## Introduction
+
+Spotify, an online music streaming platform with over 190 million active users and over 40 million tracks, faces a key challenge: how do you recommend the right music to right user? Out of a robust body of literature on recommendation systems, little work describes how users sequentially interact with recommended content. This gap is particularly evident in the music domain, where understanding when and why users skip tracks serves as crucial implicit feedback. The [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge) was released by Spotify in 2018 to encourage research on this overlooked aspect of streaming. 
+
+This project hopes to provide an elementary solution (within the bounds of knowledge learned in class) to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.** 
+
+This problem is a **classification problem**, where the prediction output is a binary variable indicating if the track was skipped (`1`) or not skipped (`0`). The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the `skip_2` field of the session logs as ground truth/the target variable as the original challenge does. 
+
+## Data Overview
+
+### Data Source
+
+Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set. For more information on the data used, please refer to the `README.me` in the `\data` folder.
+
+### Data quality & complexity check
+
+We join the `session_logs` and `track_features` datasets according to the `track_id` key to create our workable `spotify_data` datset with 167,880 observations of 47 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. 
+
+We have 2 **character** variables, 1 **Date** variable, 6 **factor** variables, 6 **logical** variables, and 32 **numeric** variables, of which 10 are **boolean** variables. 
+
+There is no missingness.
+
+```{r, echo = TRUE}
+## load packages ----
+library(tidyverse)
+library(tidymodels)
+library(patchwork)
+library(here)
+
+## load data ----
+session_logs <- read_csv(here("data/session_logs.csv")) |>
+  janitor::clean_names() |>
+  mutate(
+    context_type = factor(context_type),
+    hist_user_behavior_reason_start = factor(hist_user_behavior_reason_start),
+    hist_user_behavior_reason_end = factor(hist_user_behavior_reason_end)
+  ) |>
+  rename(track_id = track_id_clean)
+
+track_features <- read_csv(here("data/track_features.csv")) |>
+  janitor::clean_names() |>
+  mutate(
+    mode = factor(mode),
+    time_signature = factor(time_signature, ordered = TRUE),
+    key = factor(key, ordered = TRUE)
+  ) |>
+  select(!c("flatness", "mechanism", "organism"))
+
+## join data ----
+spotify_data <- inner_join(session_logs, track_features, by = "track_id")
+
+spotify_data |> skimr::skim()
+```
+
+### Potential data issues
+There are no data issues, missingness issues, or skewness with the target variable, and the distribution of TRUE and FALSE values is roughly evenly split. Interestingly, stacked bar analyses suggest that the majority of songs that are skipped (`skip_2`) typically were also ***skipped to***, whereas the songs that were not skipped were typically played from another song being played through. In other words, if the user skipped a song to get to the current song (`hist_user_behavior_reason_start` == "fwdbtn"), then the current song is more likely to be skipped too. 
+
+Potential transformations could involve the auditory feature variables that are measured from 0.0 to 1.0, like acousticness and danceability. These variables could be inverse-log transformed so the differences between tracks are more meaningful. 
+
+```{r, echo = TRUE} 
+## split data ----
+set.seed(1104)
+
+# initial split
+spotify_split <- spotify_data |>
+  group_initial_split(group = "session_id", prop = 0.8)
+
+spotify_train <- spotify_split |> training()
+spotify_test <- spotify_split |> testing()
+
+# split for eda
+spotify_split_eda <- spotify_train |>
+  group_initial_split(group = "session_id", prop = 0.2)
+
+spotify_eda <- spotify_split_eda |> training()
+
+plot_stacked_bar <- function(data, x_variable, fill_variable) {
+  ggplot(data, aes({{x_variable}}, fill = {{fill_variable}})) +
+    geom_bar(position = "stack") +
+    theme(legend.position = "bottom", legend.title = element_blank())
+}
+
+plot1 <- spotify_eda |> plot_stacked_bar(skip_2, context_type)
+plot2 <- spotify_eda |> plot_stacked_bar(skip_2, hist_user_behavior_reason_start)
+plot3 <- spotify_eda |> plot_stacked_bar(skip_2, hist_user_behavior_reason_end)
+plot4 <- spotify_eda |> plot_stacked_bar(skip_2, key)
+plot5 <- spotify_eda |> plot_stacked_bar(skip_2, mode)
+plot6 <- spotify_eda |> plot_stacked_bar(skip_2, time_signature)
+
+(plot1 + plot2)
+(plot3 + plot4)
+(plot5 + plot6)
+
+```
+
+## Methods
+
+[Should cover the data splitting procedure and clearly identify what type of prediction problem it is. State and describe the model types you will be fitting. Describe any parameters that will be tuned. Describe what recipes will be used. Describe the resampling technique used. In some cases an extended discussion about recipe variations might be useful. Especially if students are using recipe variation to try and explore the predictive importance of certain variables. Explain the metric that will be used to compare and ultimately used to select a final model.]
+
+## Model Building & Selection
+
+[Should reiterate the metric that will be used to compare models and determine which will be the final/winning model. Include a table of the best performing model results. Review and analysis of tuning parameters should happen here. Should further tuning be explored? Or how should tuning be adjusted when fitting data like this in the future. This would be a good section to describe what the best parameters were for each model type. Could include a discussion comparing any systematic differences in performance between model types or recipes. If variations in recipes were used to explore predictive importance of certain variables, then it should be discussed here. The section will likely end with the selection of the final/winning model (provide your reasoning). Was it surprising or not surprising that this particular model won? Explain.]
+
+## Final Model Analysis
+
+[This is where you fit your final/winning model to the testing data. Assess the final model’s performance with at least the metric used to determine the winning model, but it is also advisable to use other performance metrics (especially ones that might be easier to communicate/understand). Should include an exploration of predictions vs the true values (graph) or a confusion matrix (table). Remember to consider the scale of your outcome variable at this time — did you transform the target variable? If a transformation was used, then you should consider conducting analyses on both the original and transformed scale of the target variable. Is the model any good? It might be the best of the models you tried, but does the effort of building a predictive model really pay off — is it that much better than a baseline/null model? Were there any features of the model you selected that make it the best (e.g. fits nonlinearity well)?]
+
+## Conclusion
+
+[State any conclusions or discoveries/insights. This is a great place for future work, new research questions, and next steps.]
+
+## References
+Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. [https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge)
+
+Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions dataset. In *The World Wide Web Conference* (pp. 2594-2600).
+
+## Appendices
+
+### EDA
+
+### Miscellaneous Extras
+

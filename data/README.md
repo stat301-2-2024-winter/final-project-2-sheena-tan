@@ -1,5 +1,74 @@
-## Datasets
+## Source Data
 
-Cite and describe datasets ....
+The schema for the session logs found in `session_logs.csv` is below. Each row in the file corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. The 22 fields and their corresponding values are as follows:
+
+|  Field  | Values |
+|---------|--------|
+| session_id  | E.g. 65_283174c5-551c-4c1b-954b-cb60ffcc2aec - unique identifier for the session that this row is a part of |
+| session_position | {1-20} - position of row within session |
+| session_length | {10-20} - number of rows in session |
+| track_id_clean | E.g. t_13d34e4b-dc9b-4535-963d-419afa8332ec - unique identifier for the track played linked with `track_id` in the track features dataset |
+| skip_1 | Boolean indicating if the track was only played *very briefly* |
+| skip_2 | Boolean indicating if the track was only played *briefly* |
+| skip_3 | Boolean indicating if *most* of the track was played |
+| not_skipped | Boolean indicating that the track was played in its entirety |
+| context_switch | Boolean indicating if the user changed contexts between the previous row and the current row, like if the user switched from one playlist to another. |
+| no_pause_before_play | Boolean indicating if there was *no pause* between playback of the previous track and this track |
+| short_pause_before_play | Boolean indicating if there was *a short pause* between playback of the previous track and this track |
+| long_pause_before_play | Boolean indicating if there was *a long pause* between playback of the previous track and this track |
+| hist_user_behavior_n_seekfwd | Number of times the user did a *seek forward* within track |
+| hist_user_behavior_n_seekback | Number of times the user did a *seek back* within track |
+| hist_user_behavior_is_shuffle | Boolean indicating if the user encountered this track while shuffle mode was activated |
+| hour_of_day | {0-23} - The hour of day |
+| date | E.g. 2018-09-18 - The date |
+| premium | Boolean indicating if the user was on premium or not |
+| context_type | E.g. editorial playlist - what type of context the playback occurred within |
+| hist_user_behavior_reason_start | E.g. fwdbtn - the user action which led to the current track being played |
+| hist_user_behavior_reason_end | E.g. trackdone - the user action which led to the current track playback ending |
 
 
+The schema for the track features and metadata found in `track_features.csv` is below. Each row in the file corresponds to one track, for each of the 50,704 unique tracks represented in the session logs dataset. The 30 fields and their corresponding values are as follows:
+
+|  Field  | Values |
+|---------|--------|
+| track_id | E.g. t_13d34e4b-dc9b-4535-963d-419afa8332ec - unique identifier for the track played linked with `track_id_clean` in the session logs dataset |
+| duration | Length of track in seconds |
+| release_year | Estimate of year the track was released |
+| us_popularity_estimate | Estimate of the US popularity percentile of the track as of October 12, 2018 |
+| acousticness | A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic. |
+| beat_strength | Beat strength measured from 0.0 to 1.0 |
+| bounciness | Bounciness measured from 0.0 to 1.0 |
+| danceability | Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable. |
+| dyn_range_mean | Mean dynamic range of a track. A higher value indicates a greater range between quiet and loud dynamics. |
+| energy | Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy. |
+| flatness | Obsolete variable. See [https://developer.spotify.com/documentation/web-api/reference/get-audio-features](https://developer.spotify.com/documentation/web-api/reference/get-audio-features) |
+| instrumentalness | Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0. |
+| key | The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on. If no key was detected, the value is -1. |
+| liveness | Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live. |
+| mechanism | Obsolete variable. See [https://developer.spotify.com/documentation/web-api/reference/get-audio-features](https://developer.spotify.com/documentation/web-api/reference/get-audio-features) |
+| mode | Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0. |
+| organism | Obsolete variable. See [https://developer.spotify.com/documentation/web-api/reference/get-audio-features](https://developer.spotify.com/documentation/web-api/reference/get-audio-features) |
+| speechiness | Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks. |
+| tempo | The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration. |
+| time_signature | An estimated time signature. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure). The time signature ranges from 3 to 7 indicating time signatures of "3/4", to "7/4". |
+| valence | A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry). |
+| acoustic_vector_0 | See http://benanne.github.io/2014/08/05/spotify-cnns.html and
+http://papers.nips.cc/paper/5004-deep-content-basedacoustic_ |
+| acoustic_vector_1 | See acoustic_vector_0 |
+| acoustic_vector_2 | See acoustic_vector_0 |
+| acoustic_vector_3 | See acoustic_vector_0 |
+| acoustic_vector_4 | See acoustic_vector_0 |
+| acoustic_vector_5 | See acoustic_vector_0 |
+| acoustic_vector_6 | See acoustic_vector_0 |
+| acoustic_vector_7 | See acoustic_vector_0 |
+
+
+## Project Files
+
+The folder also contains two data splits, a dataset used for exploratory data analysis (EDA), a dataset for model testing, and a dataset for model training:
+
+- `spotify_split.rds`: an 80/20 split to create the training and testing datasets respectively
+- `spotify_split_eda.rds`: a 20% split of the training set to create the dataset used for EDA, which was added back to the training data after usage
+- `spotify_eda.rds`: dataset used for EDA
+- `spotify_train.rds`: dataset used for model training
+- `spotify_test.rds`: dataset used for model testing
