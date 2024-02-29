@@ -83,13 +83,27 @@ The logistic model used the preprocessing stored in `spotify_recipe_lm`. Unneede
 The k-nearest neighbors, random forest, and boosted tree models will use the preprocessing stored in `spotify_recipe_tree`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
 
 ## Model fitting 
-have two model types defined and fitted to the resamples: null/baseline model and one other model type (likely standard linear or logistic model):
-The recipe can be very basic since we just want to see if you can get things running
-demonstrate their fits are successful by displaying a table that contains each model's assessment metric value.
+A naive bayes model was defined and fitted as a baseline model. A logistic model was also defined and fitted. A table containing each model's assessment metric (accuracy) can be seen below.
+
+|   model   |   accuracy   |   std_err   |
+|-----------|--------------|-------------|
+| baseline  |   0.8595365	 | 7.744369e-4 |
+|    lm     |   0.8742669	 | 3.703331e-4 |
+
+The baseline model had an accuracy of approximately **85.95%**, and the logistic model had an accuracy of approximately **87.43%**. Both of these accuracy measures are fairly high, with over 85% of the songs being correctly predicted as skipped or not skipped. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models might be worthwhile to explore. 
 
 ## Progress summary
-summarize their progress, where they are at, and what their next steps will be. Identifying and potential issues or concerns would be a good idea too.
+I have completed data exploration, created an analysis plan, built out the project repository, and defined and fitted my first two models. From here, I will:
 
+1. define and fit the tree-based models: boosted tree, random forest, and k-nearest neighbors;
+2. compare the performance of the models to select a final model;
+3. train the final model on the entire training data set;
+4. test the final model and assess its performance;
+5. visualize as necessary and write a final report of the results.
+
+I am a bit concerned by how long some of the model fitting is taking, even when using parallel processing. Am I doing the parallel processing incorrectly? Fitting the baseline model took me **almost 40 minutes!** I recognize that I am using a much larger data set than we do in class, but I was not expecting it to take so long for the simplest model. Comparatively, it took about 10 minutes for the logistic model.
+
+I am also wondering if there is a way to fit the model to each participant that won't be too complex. Should I include `session_id` or `track_id` as predictive variables? Since music is so personalized, I would imagine that a model that works for each participant would be even more accurate.
 
 ## References
 Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. [https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge)
