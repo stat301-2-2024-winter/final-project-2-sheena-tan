@@ -34,96 +34,64 @@ Spotify, an online music streaming platform with over 190 million active users a
 
 This project hopes to provide an elementary solution (within the bounds of knowledge learned in class) to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.** 
 
-This problem is a **classification problem**, where the prediction output is a binary variable indicating if the track was skipped (`1`) or not skipped (`0`). The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the `skip_2` field of the session logs as ground truth/the target variable as the original challenge does. 
+This problem is a **classification problem**, where the prediction output is a binary variable indicating if the track was skipped or not skipped. The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the target variable `skipped`, a modified version of the original challenge's `skip_2` field, where `skip_2` is a boolean variable (`TRUE`/`FALSE`) and `skipped` is a character variable (`yes`/`no`).
 
 ## Data Overview
 
 ### Data Source
 
-Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set. For more information on the data used, please refer to the `README.me` in the `\data` folder.
+Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set. 
 
 ### Data quality & complexity check
 
-We join the `session_logs` and `track_features` datasets according to the `track_id` key to create our workable `spotify_data` datset with 167,880 observations of 47 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. 
-
-We have 2 **character** variables, 1 **Date** variable, 6 **factor** variables, 6 **logical** variables, and 32 **numeric** variables, of which 10 are **boolean** variables. 
-
-There is no missingness.
-
-```{r, echo = TRUE}
-## load packages ----
-library(tidyverse)
-library(tidymodels)
-library(patchwork)
-library(here)
-
-## load data ----
-session_logs <- read_csv(here("data/session_logs.csv")) |>
-  janitor::clean_names() |>
-  mutate(
-    context_type = factor(context_type),
-    hist_user_behavior_reason_start = factor(hist_user_behavior_reason_start),
-    hist_user_behavior_reason_end = factor(hist_user_behavior_reason_end)
-  ) |>
-  rename(track_id = track_id_clean)
-
-track_features <- read_csv(here("data/track_features.csv")) |>
-  janitor::clean_names() |>
-  mutate(
-    mode = factor(mode),
-    time_signature = factor(time_signature, ordered = TRUE),
-    key = factor(key, ordered = TRUE)
-  ) |>
-  select(!c("flatness", "mechanism", "organism"))
-
-## join data ----
-spotify_data <- inner_join(session_logs, track_features, by = "track_id")
-
-spotify_data |> skimr::skim()
-```
+The complete data set contains 167,880 observations of 47 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. For more information on the data used, please refer to the `README.me` in the `\data` folder.
 
 ### Potential data issues
-There are no data issues, missingness issues, or skewness with the target variable, and the distribution of TRUE and FALSE values is roughly evenly split. Interestingly, stacked bar analyses suggest that the majority of songs that are skipped (`skip_2`) typically were also ***skipped to***, whereas the songs that were not skipped were typically played from another song being played through. In other words, if the user skipped a song to get to the current song (`hist_user_behavior_reason_start` == "fwdbtn"), then the current song is more likely to be skipped too. 
 
-Potential transformations could involve the auditory feature variables that are measured from 0.0 to 1.0, like acousticness and danceability. These variables could be inverse-log transformed so the differences between tracks are more meaningful. 
-
-```{r, echo = TRUE} 
-## split data ----
-set.seed(1104)
-
-# initial split
-spotify_split <- spotify_data |>
-  group_initial_split(group = "session_id", prop = 0.8)
-
-spotify_train <- spotify_split |> training()
-spotify_test <- spotify_split |> testing()
-
-# split for eda
-spotify_split_eda <- spotify_train |>
-  group_initial_split(group = "session_id", prop = 0.2)
-
-spotify_eda <- spotify_split_eda |> training()
-
-plot_stacked_bar <- function(data, x_variable, fill_variable) {
-  ggplot(data, aes({{x_variable}}, fill = {{fill_variable}})) +
-    geom_bar(position = "stack") +
-    theme(legend.position = "bottom", legend.title = element_blank())
-}
-
-plot1 <- spotify_eda |> plot_stacked_bar(skip_2, context_type)
-plot2 <- spotify_eda |> plot_stacked_bar(skip_2, hist_user_behavior_reason_start)
-plot3 <- spotify_eda |> plot_stacked_bar(skip_2, hist_user_behavior_reason_end)
-plot4 <- spotify_eda |> plot_stacked_bar(skip_2, key)
-plot5 <- spotify_eda |> plot_stacked_bar(skip_2, mode)
-plot6 <- spotify_eda |> plot_stacked_bar(skip_2, time_signature)
-
-plot1 + plot2
-plot3 + plot4
-plot5 + plot6
-
-```
+When reading in the data, variables `context_type`, `hist_user_behavior_reason_start`,  `hist_user_behavior_reason_end`, `mode`, `time_signature`, and `key` were retyped as factors. Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. 
+ 
 
 ## Methods
+
+### Assessment metric
+
+Models will be assessed using accuracy, and a confusion matrix will be produced.
+
+### Analysis plan
+
+An 80-20 training-test split was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
+
+The following model types were specified with a plan for tuning hyperparameters using a regular grid:
+
+- logistic regression model (`glm` engine)
+- Elastic net model (`glmnet` engine)
+    - Mixture was explored over $[0,1]$ range with 21 levels
+    - Penalty was explored over $[-3,0]$ range with 21 levels (on log-10 scale)
+- K-nearest neighbors model (`kknn` engine)
+    - Neighbors was explored over $[1,25]$ with 7 levels
+- Random forest (`ranger` engine)
+    - Number of trees was explored over $[500, 2000]$ with 4 levels
+    - Number of randomly selected predictors to split on was explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting was explored over $[2,40]$ with 4 levels
+- Boosted tree (`xgboost` engine)
+    - Number of trees was explored over $[100, 2000]$ with 6 levels
+    - Number of randomly selected predictors to split on was explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting was explored over $[2,40]$ with 4 levels
+    - Learning rate was explored over $[-5,-0.2]$ with 10 levels (on log-10 scale)
+    
+The preprocessing/feature engineering for these models can be observed in the `2_recipes_ex2.R` script. Reviewing will help to fully understand the preprocessing steps used.
+
+The logistic and elastic net models used the preprocessing stored in `titanic_recipe_lm`. We take care to remove unneeded variables (`passenger_id`, `name`, `cabin`, `embarked`, `ticket` and variables with zero variance), use linear model to impute missing values for `age`, dummy code predictor variables that are factors, add complexity by including some interactions, and standardize all numerical variables.
+
+The k-nearest neighbors, random forest, and boosted tree models used the preprocessing stored in `titanic_recipe_tree`. We take care to remove unneeded variables (`passenger_id`, `name`, `cabin`, `embarked`, `ticket` and variables with zero variance), use linear model to impute missing values for `age`, one-hot encode predictor variables that are factors, and standardize all numerical variables.
+
+Before any training of models occurs we decided the accuracy would be the metric by which we would compare models.
+
+have an analysis plan: data splitting, resampling (cross-validation, bootstrap, etc), which model types, how many recipes etc. Note that students should have this mapped out in their GitHub repo. That is, there should be place holder R scripts created. You don't have to have everything coded, but the overall structure should be evident.   
+have two model types defined and fitted to the resamples: null/baseline model and one other model type (likely standard linear or logistic model):
+The recipe can be very basic since we just want to see if you can get things running
+demonstrate their fits are successful by displaying a table that contains each model's assessment metric value.
+summarize their progress, where they are at, and what their next steps will be. Identifying and potential issues or concerns would be a good idea too.
 
 [Should cover the data splitting procedure and clearly identify what type of prediction problem it is. State and describe the model types you will be fitting. Describe any parameters that will be tuned. Describe what recipes will be used. Describe the resampling technique used. In some cases an extended discussion about recipe variations might be useful. Especially if students are using recipe variation to try and explore the predictive importance of certain variables. Explain the metric that will be used to compare and ultimately used to select a final model.]
 
