@@ -36,6 +36,7 @@ This project hopes to provide an elementary solution (within the bounds of knowl
 
 This problem is a **classification problem**, where the prediction output is a binary variable indicating if the track was skipped or not skipped. The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the target variable `skipped`, a modified version of the original challenge's `skip_2` field, where `skip_2` is a boolean variable (`TRUE`/`FALSE`) and `skipped` is a character variable (`yes`/`no`).
 
+
 ## Data Overview
 
 ### Data Source
@@ -61,60 +62,56 @@ Models will be assessed using accuracy, and a confusion matrix will be produced.
 
 An 80-20 training-test split was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
 
-The following model types were specified with a plan for tuning hyperparameters using a regular grid:
+The following model types will be created with hyperparameters to be tuned using a regular grid:
 
+- naive bayes baseline model (`klaR` engine)
 - logistic regression model (`glm` engine)
-- Elastic net model (`glmnet` engine)
-    - Mixture was explored over $[0,1]$ range with 21 levels
-    - Penalty was explored over $[-3,0]$ range with 21 levels (on log-10 scale)
 - K-nearest neighbors model (`kknn` engine)
-    - Neighbors was explored over $[1,25]$ with 7 levels
+    - Neighbors will be explored over $[1,25]$ with 7 levels
 - Random forest (`ranger` engine)
-    - Number of trees was explored over $[500, 2000]$ with 4 levels
-    - Number of randomly selected predictors to split on was explored over $[1,5]$ with 5 levels
-    - Minimum number of data points in a node for splitting was explored over $[2,40]$ with 4 levels
+    - Number of trees will be explored over $[500, 2000]$ with 4 levels
+    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
 - Boosted tree (`xgboost` engine)
-    - Number of trees was explored over $[100, 2000]$ with 6 levels
-    - Number of randomly selected predictors to split on was explored over $[1,5]$ with 5 levels
-    - Minimum number of data points in a node for splitting was explored over $[2,40]$ with 4 levels
-    - Learning rate was explored over $[-5,-0.2]$ with 10 levels (on log-10 scale)
+    - Number of trees will be explored over $[100, 2000]$ with 6 levels
+    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
+    - Learning rate will be explored over $[-5,-0.2]$ with 10 levels (on log-10 scale)
     
-The preprocessing/feature engineering for these models can be observed in the `2_recipes_ex2.R` script. Reviewing will help to fully understand the preprocessing steps used.
+The logistic model used the preprocessing stored in `spotify_recipe_lm`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
 
-The logistic and elastic net models used the preprocessing stored in `titanic_recipe_lm`. We take care to remove unneeded variables (`passenger_id`, `name`, `cabin`, `embarked`, `ticket` and variables with zero variance), use linear model to impute missing values for `age`, dummy code predictor variables that are factors, add complexity by including some interactions, and standardize all numerical variables.
+The k-nearest neighbors, random forest, and boosted tree models will use the preprocessing stored in `spotify_recipe_tree`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
 
-The k-nearest neighbors, random forest, and boosted tree models used the preprocessing stored in `titanic_recipe_tree`. We take care to remove unneeded variables (`passenger_id`, `name`, `cabin`, `embarked`, `ticket` and variables with zero variance), use linear model to impute missing values for `age`, one-hot encode predictor variables that are factors, and standardize all numerical variables.
-
-Before any training of models occurs we decided the accuracy would be the metric by which we would compare models.
-
-have an analysis plan: data splitting, resampling (cross-validation, bootstrap, etc), which model types, how many recipes etc. Note that students should have this mapped out in their GitHub repo. That is, there should be place holder R scripts created. You don't have to have everything coded, but the overall structure should be evident.   
+## Model fitting 
 have two model types defined and fitted to the resamples: null/baseline model and one other model type (likely standard linear or logistic model):
 The recipe can be very basic since we just want to see if you can get things running
 demonstrate their fits are successful by displaying a table that contains each model's assessment metric value.
+
+## Progress summary
 summarize their progress, where they are at, and what their next steps will be. Identifying and potential issues or concerns would be a good idea too.
 
-[Should cover the data splitting procedure and clearly identify what type of prediction problem it is. State and describe the model types you will be fitting. Describe any parameters that will be tuned. Describe what recipes will be used. Describe the resampling technique used. In some cases an extended discussion about recipe variations might be useful. Especially if students are using recipe variation to try and explore the predictive importance of certain variables. Explain the metric that will be used to compare and ultimately used to select a final model.]
-
-## Model Building & Selection
-
-[Should reiterate the metric that will be used to compare models and determine which will be the final/winning model. Include a table of the best performing model results. Review and analysis of tuning parameters should happen here. Should further tuning be explored? Or how should tuning be adjusted when fitting data like this in the future. This would be a good section to describe what the best parameters were for each model type. Could include a discussion comparing any systematic differences in performance between model types or recipes. If variations in recipes were used to explore predictive importance of certain variables, then it should be discussed here. The section will likely end with the selection of the final/winning model (provide your reasoning). Was it surprising or not surprising that this particular model won? Explain.]
-
-## Final Model Analysis
-
-[This is where you fit your final/winning model to the testing data. Assess the final model’s performance with at least the metric used to determine the winning model, but it is also advisable to use other performance metrics (especially ones that might be easier to communicate/understand). Should include an exploration of predictions vs the true values (graph) or a confusion matrix (table). Remember to consider the scale of your outcome variable at this time — did you transform the target variable? If a transformation was used, then you should consider conducting analyses on both the original and transformed scale of the target variable. Is the model any good? It might be the best of the models you tried, but does the effort of building a predictive model really pay off — is it that much better than a baseline/null model? Were there any features of the model you selected that make it the best (e.g. fits nonlinearity well)?]
-
-## Conclusion
-
-[State any conclusions or discoveries/insights. This is a great place for future work, new research questions, and next steps.]
 
 ## References
 Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. [https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge)
 
 Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions dataset. In *The World Wide Web Conference* (pp. 2594-2600).
 
-## Appendices
 
-### EDA
+## Updates to EDA
 
-### Miscellaneous Extras
+![](images/stacked_start.png)
+![](images/stacked_context.png)
+
+::: {#fig-stacked layout-ncol=3}
+
+![Time signature](images/stacked_time_signature.png)
+![Key](images/stacked_key.png)
+![Major/Minor](images/stacked_mode.png)
+
+Other factor variables did not demonstrate differences by skip behavior
+:::
+
+
+![Skip behavior by time of day](images/plot_hour.png)
+![Play behavior by time of day](images/plot_plays.png)
 

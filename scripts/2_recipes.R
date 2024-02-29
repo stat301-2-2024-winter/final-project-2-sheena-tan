@@ -12,10 +12,14 @@ tidymodels_prefer()
 load(here("data/spotify_train.rda"))
 
 
-# build baseline recipe ----
+##########################################################################
+# Baseline recipe ----
+##########################################################################
+
 spotify_recipe_naive_bayes <- recipe(skipped ~ ., data = spotify_train) |>
-  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id) |>
+  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id, date) |>
   step_zv(all_predictors()) |>
+  step_dummy(all_nominal_predictors()) |>
   step_normalize(all_numeric_predictors())
 
 # check recipe
@@ -24,9 +28,13 @@ spotify_recipe_naive_bayes |>
   bake(new_data = NULL) |>
   glimpse()
 
-# build lm recipe ----
+
+##########################################################################
+# Logistic recipe ----
+##########################################################################
+
 spotify_recipe_lm <- recipe(skipped ~ ., data = spotify_train) |>
-  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id) |>
+  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id, date) |>
   step_zv(all_predictors()) |>
   step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors()) |>
@@ -39,7 +47,10 @@ spotify_recipe_lm |>
   glimpse()
 
 
-# build tree-based recipe ----
+##########################################################################
+# Tree-based recipe ----
+##########################################################################
+
 spotify_recipe_tree <- recipe(skipped ~ ., data = spotify_train) |>
   step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id) |>
   step_zv(all_predictors()) |>

@@ -1,59 +1,45 @@
-# Define and fit baseline models (null and naive bayes)
+# Define and fit baseline model
 
-# Note: random process below. seed set below.
+# Note: random process below. seed set before.
 
 # load packages ----
 library(tidyverse)
 library(tidymodels)
 library(here)
+library(discrim)
+library(doMC)
 
 # handle common conflicts
 tidymodels_prefer()
 
-# load training data
+# parallel processing ----
+registerDoMC(cores = parallel::detectCores(logical = TRUE))
+
+# load resamples/folds & controls ----
 load(here("data/spotify_train.rda"))
-
-# load recipe, folds
 load(here("data/spotify_folds.rda"))
+
+# load pre-processing/feature engineering/recipe ----
 load(here("recipes/spotify_recipe_naive_bayes.rda"))
-### load(here("recipes/spotify_recipe_tree.rda"))
 
-################################################################################
-# Null Model ----
-################################################################################
-
-null_spec <-
-  null_model() |>
-  set_engine("parsnip") |>
+# model specifications ----
+baseline_spec <-
+  naive_Bayes() |>
+  set_engine("klaR") |>
   set_mode("classification")
 
-null_workflow <-
+# define workflows ----
+baseline_workflow <-
   workflow() |>
-  add_model(null_spec) |>
-  add_recipe(titanic_recipe_tree)
+  add_recipe(spotify_recipe_naive_bayes) |>
+  add_model(baseline_spec)
 
-null_tuned <-
-  null_workflow |>
-  fit_resamples(titanic_folds)
+# fit workflow/model ----
+set.seed(1104)
 
-##########################################################################
-# Basic baseline ----
-##########################################################################
-
-# baseline_spec <-
-#   naive_Bayes() |>
-#   set_engine("klaR") |>
-#   set_mode("classification")
-#
-# baseline_workflow <-
-#   workflow() |>
-#   add_recipe(titanic_recipe_naive_bayes) |>
-#   add_model(baseline_spec)
-#
-# baseline_tuned <-
-#   baseline_workflow |>
-#   fit_resamples(titanic_folds)
+baseline_tuned <-
+  baseline_workflow |>
+  fit_resamples(spotify_folds)
 
 # write out results
-save(null_tuned, file = here("results/null_tuned.rda"))
-### save(baseline_tuned, file = here("results/baseline_tuned.rda"))
+save(baseline_tuned, file = here("results/baseline_tuned.rda"))
