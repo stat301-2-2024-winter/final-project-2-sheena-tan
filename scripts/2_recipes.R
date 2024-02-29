@@ -51,7 +51,7 @@ spotify_recipe_lm |>
 ##########################################################################
 
 spotify_recipe_tree <- recipe(skipped ~ ., data = spotify_train) |>
-  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id) |>
+  step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id, date) |>
   step_zv(all_predictors()) |>
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
   step_zv(all_predictors()) |>
