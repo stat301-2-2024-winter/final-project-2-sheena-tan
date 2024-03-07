@@ -65,8 +65,9 @@ The schema for the track features and metadata found in `track_features.csv` is 
 
 The folder also contains two data splits, a dataset used for exploratory data analysis (EDA), a dataset for model testing, and a dataset for model training:
 
--   `spotify_split.rds`: an 80/20 split to create the training and testing datasets respectively
--   `spotify_split_eda.rds`: a 20% split of the training set to create the dataset used for EDA, which was added back to the training data after usage
--   `spotify_eda.rds`: dataset used for EDA
--   `spotify_train.rds`: dataset used for model training
--   `spotify_test.rds`: dataset used for model testing
+-   `spotify_split.rda`: an 80/20 split to create the training and testing datasets respectively
+-   `spotify_split_eda.rda`: a 20% split of the training set to create the dataset used for EDA, which was added back to the training data after usage
+-   `spotify_folds.rda`: folds used for K-fold cross-validation stratified sampling
+-   `spotify_eda.rda`: dataset used for EDA
+-   `spotify_train.rda`: dataset used for model training
+-   `spotify_test.rda`: dataset used for model testing

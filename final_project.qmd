@@ -1,0 +1,122 @@
+---
+title: "Can Spotify predict if you'll skip a song?"
+subtitle: |
+  | Spotify Sequential Skip Prediction
+  | Data Science 2 with R (STAT 301-2) Final Project
+author: "Sheena Tan"
+date: today
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    
+execute:
+  echo: false
+  warning: false
+
+from: markdown+emoji 
+reference-location: margin
+citation-location: margin
+---
+
+::: {.callout-tip icon=false}
+
+## Github Repo Link
+
+[https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan](https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan)
+
+:::
+
+## Introduction
+
+Spotify, an online music streaming platform with over 190 million active users and over 40 million tracks, faces a key challenge: how do you recommend the right music to right user? Out of a robust body of literature on recommendation systems, little work describes how users sequentially interact with recommended content. This gap is particularly evident in the music domain, where understanding when and why users skip tracks serves as crucial implicit feedback. The [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge) was released by Spotify in 2018 to encourage research on this overlooked aspect of streaming. 
+
+This project hopes to provide an elementary solution (within the bounds of knowledge learned in class) to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.** 
+
+The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the target variable `skipped`, a modified version of the original challenge's `skip_2` field, where `skip_2` is a boolean variable (`TRUE`/`FALSE`) and `skipped` is a character variable (`yes`/`no`).
+
+
+## Data Overview
+
+### Data Source
+
+Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set. 
+
+### Data quality & complexity check
+
+The complete data set contains 167,880 observations of 47 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. For more information on the data used, please refer to the `README.me` in the `\data` folder.
+
+### Potential data issues
+
+When reading in the data, variables `context_type`, `hist_user_behavior_reason_start`,  `hist_user_behavior_reason_end`, `mode`, `time_signature`, and `key` were retyped as factors. Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. 
+ 
+
+## Methods
+
+### Assessment metric
+
+Models will be assessed using accuracy, and a confusion matrix will be produced.
+
+### Analysis plan
+
+An 80-20 training-test split was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
+
+The following model types will be created with hyperparameters to be tuned using a regular grid:
+
+- naive bayes baseline model (`klaR` engine)
+- logistic regression model (`glm` engine)
+- K-nearest neighbors model (`kknn` engine)
+    - Neighbors will be explored over $[1,25]$ with 7 levels
+- Random forest (`ranger` engine)
+    - Number of trees will be explored over $[500, 2000]$ with 4 levels
+    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
+- Boosted tree (`xgboost` engine)
+    - Number of trees will be explored over $[100, 2000]$ with 6 levels
+    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
+    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
+    - Learning rate will be explored over $[-5,-0.2]$ with 10 levels (on log-10 scale)
+    
+The logistic model used the preprocessing stored in `spotify_recipe_lm`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
+
+The k-nearest neighbors, random forest, and boosted tree models will use the preprocessing stored in `spotify_recipe_tree`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
+
+## Model fitting 
+A naive bayes model was defined and fitted as a baseline model. A logistic model was also defined and fitted. A table containing each model's assessment metric (accuracy) can be seen below.
+
+|   model   |   accuracy   |   std_err   |
+|-----------|--------------|-------------|
+| baseline  |   0.8595365	 | 7.744369e-4 |
+|    lm     |   0.8742669	 | 3.703331e-4 |
+
+The baseline model had an accuracy of approximately **85.95%**, and the logistic model had an accuracy of approximately **87.43%**. Both of these accuracy measures are fairly high, with over 85% of the songs being correctly predicted as skipped or not skipped. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models might be worthwhile to explore. 
+
+## Continued
+This project is in progress. Please refer to the Github repository for the most recent version of the project report. 
+
+## References
+Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. [https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge)
+
+Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions dataset. In *The World Wide Web Conference* (pp. 2594-2600).
+
+
+## Appendix
+### Updates to EDA
+
+![](images/stacked_start.png)
+![](images/stacked_context.png)
+
+::: {#fig-stacked layout-ncol=3}
+
+![Time signature](images/stacked_time_signature.png)
+![Key](images/stacked_key.png)
+![Major/Minor](images/stacked_mode.png)
+
+Other factor variables did not demonstrate differences by skip behavior
+:::
+
+
+![Skip behavior by time of day](images/plot_hour.png)
+![Play behavior by time of day](images/plot_plays.png)
+
