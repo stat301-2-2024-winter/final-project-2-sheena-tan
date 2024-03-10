@@ -16,16 +16,16 @@ registerDoMC(cores = parallel::detectCores(logical = TRUE))
 load(here("data/spotify_train.rda"))
 
 # load final model
-load(here("results/null_tuned.rda"))
+load(here("results/lm_fit.rda"))
 
 # finalize workflow ----
-final_wflow <-
+final_workflow <-
   workflow() |>
-  add_model(null_spec) |>
-  add_recipe(titanic_recipe_tree)
+  add_model(lm_fit) |>
+  add_recipe(spotify_recipe_lm)
 
 # train final model
-final_fit <- fit(final_wflow, spotify_train)
+final_fit <- fit(final_workflow, spotify_train)
 
 # write out final model
 save(final_fit, file = here("results/final_fit.rda"))

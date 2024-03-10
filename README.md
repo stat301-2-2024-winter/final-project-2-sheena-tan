@@ -19,6 +19,7 @@ All R scripts can be found in the `scripts/` subdirectory. These include:
 -  `3_tune_bt.R`: define and fit boosted tree model
 -  `3_tune_knn.R`: define and fit k-nearest neighbors model
 -  `3_tune_rf.R`: define and fit random forest model
+-  `3_tune_svm.R`: define and fit support vector machine model
 -  `4_model_analysis.R`: model selection/comparison & analysis
 -  `5_train_final_model.R`: final model training
 -  `6_assess_final_model.R`: final model testing and analysis
@@ -33,5 +34,5 @@ The `memos/` subdirectory contains two progress reports explaining project progr
 
 Other files include:
 
--  `final_project.html` and `final_project.qmd`: the (rendered) final project report
--  `.gitignore` with instructions to ignore files greater than 100MB when committing  
+-  `Sheena_Tan_final_project.html` and `Sheena_Tan_final_project.qmd`: the (rendered) final project report
+-  `Sheena_Tan_executive_summary.html` and `Sheena_Tan_executive_summary.qmd`: the (rendered) final project executive summary

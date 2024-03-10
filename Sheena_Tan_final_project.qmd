@@ -2,7 +2,6 @@
 title: "Can Spotify predict if you'll skip a song?"
 subtitle: |
   | Spotify Sequential Skip Prediction
-  | Data Science 2 with R (STAT 301-2) Final Project
 author: "Sheena Tan"
 date: today
 
@@ -20,103 +19,116 @@ reference-location: margin
 citation-location: margin
 ---
 
-::: {.callout-tip icon=false}
-
+::: {.callout-tip icon="false"}
 ## Github Repo Link
 
-[https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan](https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan)
-
+<https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan>
 :::
 
 ## Introduction
 
-Spotify, an online music streaming platform with over 190 million active users and over 40 million tracks, faces a key challenge: how do you recommend the right music to right user? Out of a robust body of literature on recommendation systems, little work describes how users sequentially interact with recommended content. This gap is particularly evident in the music domain, where understanding when and why users skip tracks serves as crucial implicit feedback. The [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge) was released by Spotify in 2018 to encourage research on this overlooked aspect of streaming. 
+Spotify, an online music streaming platform with over 190 million active users and over 40 million tracks, faces a key challenge: how do you recommend the right music to right user? Out of a robust body of literature on recommendation systems, little work describes how users sequentially interact with recommended content. This gap is particularly evident in the music domain, where understanding when and why users skip tracks serves as crucial implicit feedback. The [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge) was released by Spotify in 2018 to encourage research on this overlooked aspect of streaming.
 
-This project hopes to provide an elementary solution (within the bounds of knowledge learned in class) to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.** 
+This project hopes to provide a solution to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.**
 
-The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses the target variable `skipped`, a modified version of the original challenge's `skip_2` field, where `skip_2` is a boolean variable (`TRUE`/`FALSE`) and `skipped` is a character variable (`yes`/`no`).
-
+The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. This project uses an original target variable, `skipped`, which is a modified version of the original challenge's `skip_2` field: `skip_2` is a boolean variable (`TRUE`/`FALSE`) and `skipped` is a character variable (`yes`/`no`).
 
 ## Data Overview
 
-### Data Source
+Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set.
 
-Given laptop constraints, this project uses the miniature version of the [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge), which is a minimally sized version of the original training set and track features provided by Spotify for challenge users to familiarize themselves with the data set. 
+The complete data set contains 167,880 observations of 48 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks.
 
-### Data quality & complexity check
+Each listening session contained information on the order that tracks were listened to and whether or not the track was skipped. Each track contained information on over 25 of its different properties, such as its popularity; musical classifications like key, time signature, and tempo; or Spotify-specific classifications like danceability, bounciness, speechiness, or liveness. For more information on the data, please refer to the `README.me` codebook.
 
-The complete data set contains 167,880 observations of 47 variables. Each observation corresponds to the playback of one track, for a total of 167,880 tracks listened to during 10,000 unique listening sessions, representing 50,704 unique tracks. For more information on the data used, please refer to the `README.me` in the `\data` folder.
+Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. Exploratory data analysis demonstrated correlations between skip behavior and other listening variables, like the way a track was started.
 
-### Potential data issues
+![](images/stacked_start.png)
 
-When reading in the data, variables `context_type`, `hist_user_behavior_reason_start`,  `hist_user_behavior_reason_end`, `mode`, `time_signature`, and `key` were retyped as factors. Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. 
- 
+Overall, initial explorations support the viability of a predictive model.
 
 ## Methods
 
 ### Assessment metric
 
-Models will be assessed using accuracy, and a confusion matrix will be produced.
+As the prediction problem is a *classification* problem, models will be compared using accuracy, and a confusion matrix will be produced for the selected final model.
 
-### Analysis plan
+### Model overview
 
 An 80-20 training-test split was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
 
-The following model types will be created with hyperparameters to be tuned using a regular grid:
+The following model types were created with hyperparameters tuned using a regular grid:
 
-- naive bayes baseline model (`klaR` engine)
-- logistic regression model (`glm` engine)
-- K-nearest neighbors model (`kknn` engine)
-    - Neighbors will be explored over $[1,25]$ with 7 levels
-- Random forest (`ranger` engine)
-    - Number of trees will be explored over $[500, 2000]$ with 4 levels
-    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
-    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
-- Boosted tree (`xgboost` engine)
-    - Number of trees will be explored over $[100, 2000]$ with 6 levels
-    - Number of randomly selected predictors to split on will be explored over $[1,5]$ with 5 levels
-    - Minimum number of data points in a node for splitting will be explored over $[2,40]$ with 4 levels
-    - Learning rate will be explored over $[-5,-0.2]$ with 10 levels (on log-10 scale)
-    
-The logistic model used the preprocessing stored in `spotify_recipe_lm`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
+-   Naive bayes baseline model (`klaR` engine)
+-   Logistic regression model (`glm` engine)
+-   Support vector machine (`kernlab` engine)
+    -   Degree of interaction was explored over $[1,3]$ with 3 levels
+    -   Cost was explored over $[-10,5]$ with 5 levels (on log-2 scale)
+-   K-nearest neighbors model (`kknn` engine)
+    -   Neighbors were explored over $[1,15]$ with 5 levels
+-   Random forest (`ranger` engine)
+    -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
+    -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
+-   Boosted tree (`xgboost` engine)
+    -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
+    -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
+    -   Learning rate was explored over $[-3,-0.5]$ with 5 levels (on log-10 scale)
 
-The k-nearest neighbors, random forest, and boosted tree models will use the preprocessing stored in `spotify_recipe_tree`. Unneeded variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, predictor variables that are factors were dummy coded, and all numerical variables were standardized.
+The naive bayes model used the preprocessing stored in `spotify_recipe_naive_bayes`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed and all numerical variables were standardized.
 
-## Model fitting 
-A naive bayes model was defined and fitted as a baseline model. A logistic model was also defined and fitted. A table containing each model's assessment metric (accuracy) can be seen below.
+The logistic model and support vector machine models used the preprocessing stored in `spotify_recipe_lm`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal variables were dummy coded, and all numerical variables were standardized.
 
-|   model   |   accuracy   |   std_err   |
-|-----------|--------------|-------------|
-| baseline  |   0.8595365	 | 7.744369e-4 |
-|    lm     |   0.8742669	 | 3.703331e-4 |
+The k-nearest neighbors, random forest, and boosted tree models used the preprocessing stored in `spotify_recipe_tree`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal predictor variables were dummy coded, and all numerical variables were standardized.
 
-The baseline model had an accuracy of approximately **85.95%**, and the logistic model had an accuracy of approximately **87.43%**. Both of these accuracy measures are fairly high, with over 85% of the songs being correctly predicted as skipped or not skipped. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models might be worthwhile to explore. 
+## Model Building & Selection Results
+
+The models were compared using accuracy to determine the final model. Tuning parameters were compared for the support vector machine, k-nearest neighbors, random forest, and boosted tree models. The best performing parameters were:
+
+-  Support vector machine model
+    -   Degree of interaction: 
+    -   Cost:
+-   K-nearest neighbors model
+    -   Neighbors: 15
+-   Random forest
+    -   Number of randomly selected predictors to split on: 12
+    -   Minimum number of data points in a node for splitting: 40
+-   Boosted tree
+    -   Number of randomly selected predictors to split on: 47
+    -   Minimum number of data points in a node for splitting: 11
+    -   Learning rate (on a log-10 scale): 0.316
+
+Should reiterate the metric that will be used to compare models and determine which will be the final/winning model. Include a table of the best performing model results. Review and analysis of tuning parameters should happen here. Should further tuning be explored? Or how should tuning be adjusted when fitting data like this in the future. This would be a good section to describe what the best parameters were for each model type. Could include a discussion comparing any systematic differences in performance between model types or recipes. If variations in recipes were used to explore predictive importance of certain variables, then it should be discussed here. The section will likely end with the selection of the final/winning model (provide your reasoning). Was it surprising or not surprising that this particular model won? Explain.
+
+
+The naive bayes model was defined and fitted as a baseline model. The logistic model was also fitted.
+
+The baseline model had an accuracy of approximately **85.95%**, and the logistic model had an accuracy of approximately **87.43%**. Both of these accuracy measures are fairly high, with over 85% of the songs being correctly predicted as skipped or not skipped. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models would be worthwhile to explore.
+
+The support vector machine model, k-nearest neighbors model, random forest model, and boosted tree model were fitted. The trained models were compared using accuracy to determine the final model. A table containing all of the models' assessment metrics (accuracy) can be seen below.
+
+| model    | accuracy  | std_err     |
+|----------|-----------|-------------|
+| baseline | 0.8595365 | 7.744369e-4 |
+| lm       | 0.8742669 | 3.703331e-4 |
+| rf       | 0.8739005 | 2.974916e-4 |
+| bt       | 0.8611778 | 3.332508e-3 |
+| svm      | 0.XXXXXXX | X.XXXXXXe-4 |
+| knn      | 0.8283687 | 3.988367e-4 |
+
+The support vector machine model had an accuracy of approximately **XX.XX%**; the k-nearest neighbors model had an accuracy of approximately **82.84%**; the random forest model had an accuracy of approximately **XX.XX%**; and the boosted tree model had an accuracy of approximately **86.12%**. All of these accuracy measures are fairly high, with over 80% of the songs being correctly predicted as skipped or not skipped. The k-nearest neighbors model was the poorest fitting model. 
+
+Overall, the logistic model had the highest accuracy with a low standard error, suggesting that the logistic model is the best fitting model for this data. Because the data does not have many outliers, and song characteristics are typically related to each other without being entirely separated from one another (e.g., a song with a minor mode and slower tempo is typically related to a lower valence), this model does seem to be a proper choice theoretically.
 
 ## Continued
-This project is in progress. Please refer to the Github repository for the most recent version of the project report. 
+
+This project is in progress. Please refer to the Github repository for the most recent version of the project report.
 
 ## References
-Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. [https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge)
+
+Spotify. (2018). *Spotify sequential Skip Prediction Challenge: Challenges*. AIcrowd. <https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge>
 
 Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions dataset. In *The World Wide Web Conference* (pp. 2594-2600).
 
-
 ## Appendix
-### Updates to EDA
 
-![](images/stacked_start.png)
-![](images/stacked_context.png)
-
-::: {#fig-stacked layout-ncol=3}
-
-![Time signature](images/stacked_time_signature.png)
-![Key](images/stacked_key.png)
-![Major/Minor](images/stacked_mode.png)
-
-Other factor variables did not demonstrate differences by skip behavior
-:::
-
-
-![Skip behavior by time of day](images/plot_hour.png)
-![Play behavior by time of day](images/plot_plays.png)
-
+### EDA

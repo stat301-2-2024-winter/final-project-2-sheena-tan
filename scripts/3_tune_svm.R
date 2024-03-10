@@ -1,4 +1,4 @@
-# Define and fit random forest model
+# Define and fit linear support vector machine model
 
 # Note: random process below. seed set before.
 
@@ -7,6 +7,7 @@ library(tidyverse)
 library(tidymodels)
 library(here)
 library(doMC)
+library(ISLR2)
 
 # handle common conflicts
 tidymodels_prefer()
@@ -19,41 +20,39 @@ load(here("data/spotify_train.rda"))
 load(here("data/spotify_folds.rda"))
 
 # load pre-processing/feature engineering/recipe ----
-load(here("recipes/spotify_recipe_tree.rda"))
+load(here("recipes/spotify_recipe_lm.rda"))
 
 # model specifications ----
-rf_spec <-
-  rand_forest(
+svm_spec <-
+  svm_poly(
     mode = "classification",
-    trees = 500,
-    min_n = tune(),
-    mtry = tune()
+    degree = tune(),
+    cost = tune()
   ) |>
-  set_engine("ranger")
+  set_engine("kernlab", scaled = FALSE)
 
 # define workflows ----
-rf_workflow <-
+svm_workflow <-
   workflow() |>
-  add_model(rf_spec) |>
-  add_recipe(spotify_recipe_tree)
+  add_model(svm_spec) |>
+  add_recipe(spotify_recipe_lm)
 
 
 # hyperparameter tuning values ----
-rf_params <- extract_parameter_set_dials(rf_spec) |>
-  update(mtry = mtry(c(1, 47)))
+svm_params <- extract_parameter_set_dials(svm_spec)
 
-rf_grid <- grid_regular(rf_params, levels = 5)
+svm_grid <- grid_regular(svm_params, levels = 5)
 
 # fit workflow/model ----
 set.seed(1104)
 
-rf_tuned <-
+svm_tuned <-
   tune_grid(
-    rf_workflow,
+    svm_workflow,
     spotify_folds,
-    grid = rf_grid,
+    grid = svm_grid,
     control = control_grid(save_workflow = TRUE)
   )
 
 # write out results (fitted/trained workflows) ----
-save(rf_tuned, file = here("results/rf_tuned.rda"))
+save(svm_tuned, file = here("results/svm_tuned.rda"))
