@@ -41,7 +41,7 @@ The complete data set contains 167,880 observations of 48 variables. Each observ
 
 Each listening session contained information on the order that tracks were listened to and whether or not the track was skipped. Each track contained information on over 25 of its different properties, such as its popularity; musical classifications like key, time signature, and tempo; or Spotify-specific classifications like danceability, bounciness, speechiness, or liveness. For more information on the data, please refer to the `README.me` codebook.
 
-Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. Exploratory data analysis demonstrated correlations between skip behavior and other listening variables, like the way a track was started.
+Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. Exploratory data analysis demonstrated correlations between skip behavior and several other listening variables, like the way a track was started. See Appendix A for full EDA.
 
 ![](images/stacked_start.png)
 
@@ -60,33 +60,36 @@ An 80-20 training-test split was implemented using stratified sampling by target
 The following model types were created with hyperparameters tuned using a regular grid:
 
 -   Naive bayes baseline model (`klaR` engine)
--   Logistic regression model (`glm` engine)
--   Support vector machine (`kernlab` engine)
-    -   Degree of interaction was explored over $[1,3]$ with 3 levels
-    -   Cost was explored over $[-10,5]$ with 5 levels (on log-2 scale)
+-   Logistic model (`glm` engine)
+-   Neural network model (`nnet` engine)
+    -   Number of hidden units was explored over $[1,10]$ with 5 levels
+    -   Penalty was explored over $[-10,0]$ with 5 levels (on log-10 scale)
+    -   Number of epochs over $[10,1000]$ with 5 levels
 -   K-nearest neighbors model (`kknn` engine)
     -   Neighbors were explored over $[1,15]$ with 5 levels
--   Random forest (`ranger` engine)
+-   Random forest model (`ranger` engine)
     -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
     -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
--   Boosted tree (`xgboost` engine)
+-   Boosted tree model (`xgboost` engine)
     -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
     -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
     -   Learning rate was explored over $[-3,-0.5]$ with 5 levels (on log-10 scale)
 
+
 The naive bayes model used the preprocessing stored in `spotify_recipe_naive_bayes`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed and all numerical variables were standardized.
 
-The logistic model and support vector machine models used the preprocessing stored in `spotify_recipe_lm`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal variables were dummy coded, and all numerical variables were standardized.
+The logistic model and neural network models used the preprocessing stored in `spotify_recipe_lm`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal predictor variables were dummy coded, and all numerical variables were standardized.
 
-The k-nearest neighbors, random forest, and boosted tree models used the preprocessing stored in `spotify_recipe_tree`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal predictor variables were dummy coded, and all numerical variables were standardized.
+The k-nearest neighbors, random forest, and boosted tree models used the preprocessing stored in `spotify_recipe_tree`. Variables used to define the target variable and identifier variables (`skip_1`, `skip_2`, `skip_3`, `not_skipped`, `session_id`, `track_id`, and variables with zero variance) were removed, nominal predictor variables were one-hot dummy coded, and all numerical variables were standardized.
 
 ## Model Building & Selection Results
 
-The models were compared using accuracy to determine the final model. Tuning parameters were compared for the support vector machine, k-nearest neighbors, random forest, and boosted tree models. The best performing parameters were:
+The models were compared using accuracy to determine the final model. Tuning parameters were compared for the support vector machine, k-nearest neighbors, random forest, and boosted tree models. The best performing parameters were as follows:
 
--  Support vector machine model
-    -   Degree of interaction: 
-    -   Cost:
+-   Neural network model
+    -   Number of hidden units:
+    -   Penalty:
+    -   Number of epochs:
 -   K-nearest neighbors model
     -   Neighbors: 15
 -   Random forest
@@ -104,7 +107,7 @@ The naive bayes model was defined and fitted as a baseline model. The logistic m
 
 The baseline model had an accuracy of approximately **85.95%**, and the logistic model had an accuracy of approximately **87.43%**. Both of these accuracy measures are fairly high, with over 85% of the songs being correctly predicted as skipped or not skipped. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models would be worthwhile to explore.
 
-The support vector machine model, k-nearest neighbors model, random forest model, and boosted tree model were fitted. The trained models were compared using accuracy to determine the final model. A table containing all of the models' assessment metrics (accuracy) can be seen below.
+The neural network model, k-nearest neighbors model, random forest model, and boosted tree model were then fitted. The trained models were compared using accuracy to determine the final model. A table containing all of the models' assessment metrics (accuracy) can be seen below.
 
 | model    | accuracy  | std_err     |
 |----------|-----------|-------------|
@@ -112,12 +115,12 @@ The support vector machine model, k-nearest neighbors model, random forest model
 | lm       | 0.8742669 | 3.703331e-4 |
 | rf       | 0.8739005 | 2.974916e-4 |
 | bt       | 0.8611778 | 3.332508e-3 |
-| svm      | 0.XXXXXXX | X.XXXXXXe-4 |
 | knn      | 0.8283687 | 3.988367e-4 |
+| nnet     | 0.XXXXXXX | X.XXXXXXe-4 |
 
-The support vector machine model had an accuracy of approximately **XX.XX%**; the k-nearest neighbors model had an accuracy of approximately **82.84%**; the random forest model had an accuracy of approximately **XX.XX%**; and the boosted tree model had an accuracy of approximately **86.12%**. All of these accuracy measures are fairly high, with over 80% of the songs being correctly predicted as skipped or not skipped. The k-nearest neighbors model was the poorest fitting model. 
+The neural network model had an accuracy of approximately **XX.XX%**; the k-nearest neighbors model had an accuracy of approximately **82.84%**; the random forest model had an accuracy of approximately **87.39%**; and the boosted tree model had an accuracy of approximately **86.12%**. All of these accuracy measures are high, with over 80% of the songs being correctly predicted as skipped or not skipped. The k-nearest neighbors model was the poorest fitting model. 
 
-Overall, the logistic model had the highest accuracy with a low standard error, suggesting that the logistic model is the best fitting model for this data. Because the data does not have many outliers, and song characteristics are typically related to each other without being entirely separated from one another (e.g., a song with a minor mode and slower tempo is typically related to a lower valence), this model does seem to be a proper choice theoretically.
+Overall, the logistic model had the highest accuracy with a low standard error, suggesting that the logistic model is the best fitting model for this data. Because the data does not have many outliers, and characteristics of songs are typically related to each other without being entirely separated from one another (e.g., a song with a minor mode and slower tempo is usually of a lower valence), this model does seem to be a proper choice theoretically.
 
 ## Continued
 
@@ -131,4 +134,4 @@ Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions d
 
 ## Appendix
 
-### EDA
+### Appendix A: EDA

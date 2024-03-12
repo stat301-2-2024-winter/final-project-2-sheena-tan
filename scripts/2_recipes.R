@@ -36,6 +36,7 @@ spotify_recipe_lm <- recipe(skipped ~ ., data = spotify_train) |>
   step_rm(skip_1, skip_2, skip_3, not_skipped, session_id, track_id, date) |>
   step_zv(all_predictors()) |>
   step_dummy(all_nominal_predictors()) |>
+  step_integer(all_logical_predictors()) |>
   step_normalize(all_numeric_predictors())
 
 # check recipe
