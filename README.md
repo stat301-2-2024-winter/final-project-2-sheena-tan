@@ -23,10 +23,14 @@ All R scripts can be found in the `scripts/` subdirectory. These include:
 -  `4_model_analysis.R`: model selection/comparison & analysis
 -  `5_train_final_model.R`: final model training
 -  `6_assess_final_model.R`: final model testing and analysis
+-  `7_additional_explorations.R`: exploration of additional questions for future testing
 
-The `recipes/` subdirectory contains all processed recipes used in this project.
+The `recipes/` subdirectory contains all processed recipes used in this project:
+-  `spotify_recipe_lm.rda`: recipe used to create the logistic and neural network models
+-  `spotify_recipe_naive_bayes.rda`: recipe used to create the naive bayes baseline model
+-  `spotify_recipe_tree.rda`: recipe used to create the random forest, boosted tree, and k-nearest neighbors models
 
-The `results/` subdirectory contains all fitted models used in this project and any saved raw R output from model analysis (e.g., metrics tables). 
+The `results/` subdirectory contains all fitted models used in this project and any saved raw output from model analysis (e.g., metrics tables). 
 
 The `images/` subdirectory contains all images used in this project.
 
