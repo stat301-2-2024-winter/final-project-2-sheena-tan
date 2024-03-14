@@ -72,7 +72,6 @@ spotify_eda <- spotify_split_eda |> training()
 ## data fold ----
 spotify_folds <- vfold_cv(spotify_train, v = 5, repeats = 3, strata = skipped)
 
-
 ## write out splits and fold ----
 save(spotify_split, file = here("data/spotify_split.rda"))
 save(spotify_train, file = here("data/spotify_train.rda"))

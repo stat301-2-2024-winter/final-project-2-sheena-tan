@@ -12,7 +12,7 @@ tidymodels_prefer()
 load(here("data/spotify_train.rda"))
 
 # load models ----
-load(here("results/baseline_tuned.rda"))
+load(here("results/baseline_fit.rda"))
 load(here("results/lm_fit.rda"))
 load(here("results/knn_tuned.rda"))
 load(here("results/rf_tuned.rda"))
@@ -56,7 +56,7 @@ table_best_params <- show_best_params(nnet_tuned, "accuracy") |>
       mutate(model = "lm", .before = "accuracy")
   ) |>
   bind_rows(
-    show_best(baseline_tuned, metric = "accuracy") |>
+    show_best(baseline_fit, metric = "accuracy") |>
       select(mean, std_err) |>
       rename(accuracy = mean) |>
       mutate(model = "baseline", .before = "accuracy")
@@ -73,12 +73,11 @@ table_best_params <- show_best_params(nnet_tuned, "accuracy") |>
 # write out parameter table
 save(table_best_params, file = here("results/table_best_params.rda"))
 
-
 ##########################################################################
 # Model analysis ----
 ##########################################################################
 
-metrics1 <- collect_metrics(baseline_tuned) |>
+metrics1 <- collect_metrics(baseline_fit) |>
   mutate(model = "baseline") |>
   select(model, .metric, mean, std_err, n)
 
@@ -113,3 +112,37 @@ table_best_means <-
 # write out means table
 save(table_best_means, file = here("results/table_best_means.rda"))
 
+
+##########################################################################
+# Print and format tables ----
+##########################################################################
+
+library(gt)
+
+table_best_params <- table_best_params |>
+  gt(rowname_col = "model") |>
+  fmt_number(columns = accuracy, decimals = 4) |>
+  fmt_scientific(columns = std_err, decimals = 3) |>
+  fmt_integer(columns = value, rows = c(1:5, 7:11)) |>
+  tab_header(
+    title = md("**Best performing model results**"),
+    subtitle = md("**Neural network** and **boosted tree** models performed best.")
+  ) |>
+  tab_stubhead(label = "model") |>
+  tab_footnote(
+    footnote = "No parameters tuned",
+    locations = cells_body(columns = c(parameter, value), rows = 9:10)
+  )
+
+table_best_means <- table_best_means |>
+  gt(rowname_col = "model") |>
+  fmt_number(columns = mean, decimals = 4) |>
+  fmt_scientific(columns = std_err, decimals = 3) |>
+  tab_header(
+    title = md("**Mean model accuracy across folds**"),
+    subtitle = md("**Logistic** and **random forest** models performed best.")
+  ) |>
+  tab_stubhead(label = "model")
+
+gtsave(table_best_params, here("results/table_best_params.html"))
+gtsave(table_best_means, here("results/table_best_means.html"))

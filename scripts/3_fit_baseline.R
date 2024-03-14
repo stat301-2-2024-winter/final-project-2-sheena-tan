@@ -21,30 +21,6 @@ load(here("data/spotify_folds.rda"))
 
 # load pre-processing/feature engineering/recipe ----
 load(here("recipes/spotify_recipe_naive_bayes.rda"))
-# load(here("recipes/spotify_recipe_tree.rda"))
-
-# ################################################################################
-# # Null Model (the duh baseline) ----
-# ################################################################################
-#
-# # model specifications ----
-# null_spec <-
-#   null_model() |>
-#   set_engine("parsnip") |>
-#   set_mode("classification")
-#
-# # define workflows ----
-# null_workflow <-
-#   workflow() |>
-#   add_model(null_spec) |>
-#   add_recipe(spotify_recipe_tree)
-#
-# # fit workflow/model ----
-# set.seed(1104)
-#
-# null_tuned <-
-#   null_workflow |>
-#   fit_resamples(spotify_folds)
 
 ##########################################################################
 # Basic baseline ----
@@ -70,5 +46,4 @@ baseline_tuned <-
   fit_resamples(spotify_folds)
 
 # write out results
-# save(null_tuned, file = here("results/null_tuned.rda"))
-save(baseline_tuned, file = here("results/baseline_tuned.rda"))
+save(baseline_fit, file = here("results/baseline_fit.rda"))
