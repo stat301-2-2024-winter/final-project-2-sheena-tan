@@ -1,21 +1,22 @@
 ---
 title: "Can Spotify predict if you'll skip a song?"
-subtitle: "Spotify Sequential Skip Prediction"
+subtitle: |
+  | Spotify Sequential Skip Prediction
 author: "Sheena Tan"
 date: today
 
 format:
-  html:
+  pdf:
     toc: true
-    embed-resources: true
+    number-sections: true
+    colorlinks: true
+    fig-cap-location: top
+    fig-pos: "H"
     
 execute:
   echo: false
   warning: false
 
-from: markdown+emoji 
-reference-location: margin
-citation-location: margin
 ---
 
 ::: {.callout-tip icon="false"}
@@ -122,7 +123,7 @@ The final neural network model (hidden_units = 5, epochs = 1000, penalty = 1) wa
 |  **no (predicted)**  |  13643  |  1416   |
 |  **yes (predicted)**  |  2569   |  15949  |
 
-: Table 1. Final model performance confusion matrix 
+: Final model performance confusion matrix 
 
 The model predicted more false positives (*N* = 2569) than false negatives (*N* = 1416), suggesting that the model tends to predict that people skip more than they actually do. However, the difference is only by about 5.5%, which is not a significant skew. Overall, this predictive model performs significantly better than mere chance (i.e., 50% accuracy). The neural network model's capacity to process complex, nonlinear data in a way that is inspired by the human brain may have ultimately facilitated the prediction of human behavioral activity like musical preference.
 
@@ -136,7 +137,7 @@ Interestingly, an additional exploration modifying the model preprocessing to on
 |----------------------------|----------------------------|
 |  0.526  |  0.879  |
 
-: Table 2. Accuracy of same neural network model modified to include either song properties or session information
+: Accuracy of final neural network model modified to include either song properties or session information
 
 These findings highlight the possibility of certain key predictors in the session information data that could have been driving model performance, while simultaneously suggesting the difficulty of predicting skip behavior from song properties alone. Future explorations should investigate specific song properties and specific listening session characteristics that are the most influential for skip behavior. 
 
