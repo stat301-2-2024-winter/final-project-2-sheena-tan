@@ -41,21 +41,21 @@ The complete data set contains 167,880 observations of 48 variables. Each observ
 
 Each listening session contained information on the order that tracks were listened to and whether or not the track was skipped. Each track contained information on over 25 of its different properties, such as its popularity; musical classifications like key, time signature, and tempo; or Spotify-specific classifications like danceability, bounciness, speechiness, or liveness. For more information on the data, please refer to the `README.me` codebook.
 
-![](images/stacked_start.png)
+![The way a song was started differs by whether or not it was skipped](images/stacked_start.png){#fig-stacked_start}
 
-Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. Exploratory data analysis demonstrated correlations between skip behavior and several other listening variables, like the way a track was started, shown above. See Appendix A for full EDA.
+Exploratory data analysis demonstrated correlations between skip behavior and several other listening variables, like the way a track was started (*above*). Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. See Appendix A for full EDA.
 
-##### Overall, initial explorations support the viability of a predictive model.
+***Overall, initial explorations support the viability of a predictive model.***
 
 ## Methods
 
 ### Assessment metric
 
-As the prediction problem is a *classification* problem, models will be compared using accuracy, and a confusion matrix will be produced for the selected final model.
+As the prediction problem is a *classification* problem, models will be compared using **accuracy**, and a confusion matrix will be produced for the selected final model.
 
 ### Model overview
 
-An 80-20 training-test split was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
+An 80-20 training-test split (*N_train* = 134303; *N_test* = 33577) was implemented using stratified sampling by target variable (2 strata). Resamples were constructed by taking the training dataset and applying repeated V-fold cross-validation (5 folds, 3 repeats) with stratification on the target variable with 2 strata.
 
 The following model types were created with hyperparameters tuned using a regular grid:
 
@@ -86,24 +86,61 @@ The k-nearest neighbors, random forest, and boosted tree models used the preproc
 
 The naive bayes model was defined and fitted as a baseline model. The logistic model was also fitted. The logistic model had a slightly higher accuracy than the baseline model with a lower standard error than the baseline model, suggesting that more complex models would be worthwhile to explore.
 
-The neural network model, k-nearest neighbors model, random forest model, and boosted tree model were then fitted. All trained models were compared using accuracy to determine the final model. Tuning parameters were compared for the support vector machine, k-nearest neighbors, random forest, and boosted tree models. A table containing the best performing model parameters can be seen below.
+The neural network model, k-nearest neighbors model, random forest model, and boosted tree model were then fitted. All trained models were compared using accuracy to determine the final model. Tuning parameters were compared for the support vector machine, k-nearest neighbors, random forest, and boosted tree models. A table containing the best performing parameters for each model can be seen below.
 
-{{< include results/table_best_params.html >}}
+![Performance and best parameters across model types](images/table_best_params.png){#fig-best_params width=60% fig-align="center"}
 
+The neural network model (hidden_units = 5, epochs = 1000, penalty = 1) performed the best. As shown in Figure 3, other than when the epoch hyperparameter was low (epochs = 10), the neural network model had consistently high accuracy (above 0.86) across variation in hidden units and regularization. Further tuning of the number of hidden units hyperparameter may be worthwhile to explore. Accuracy appears to be highest within a range of values between 5 and 7.5, but increasing the number of levels could help to narrow in on where the peak performance actually is.
 
-[review and analyze tuning parameters; should further tuning be explored/how should tuning be adjusted when fitting data like this in the future (e.g., adjust up or down according to machine capabilities)]
+Notably, the boosted tree model (mtry = 47, min_n = 11, learn_rate = 0.316) performed almost as well as the neural network model - within one standard deviation. However, as shown in Figure 3, accuracy improved as learning rate and number of randomly selected predictors increased, reaching the highest accuracy at the highest learning rate (learn_rate = 0.316) and number of randomly selected predictors (mtry = 47) possible. These results suggest that, unlike the neural network model, there is not much room for this model to be improved upon by further tuning hyperparameters.
 
-{{< include results/table_best_means.html >}}
+::: {#fig-params_autoplot layout-ncol=2}
 
-[discussion comparing any systematic differences in performance between model types or recipes] 
+![Neural network model performance across hyperparameters](images/nnet_params_autoplot.png){#fig-nnet_params}
 
-[end with the selection of the final/winning model (provide your reasoning). Was it surprising or not surprising that this particular model won? Explain.]
+![Boosted tree model performance across hyperparameters](images/bt_params_autoplot.png){#fig-bt_params}
 
-Overall, the logistic model had the highest accuracy with a low standard error, suggesting that the logistic model is the best fitting model for this data. Because the data does not have many outliers, and characteristics of songs are typically related to each other without being entirely separated from one another (e.g., a song with a minor mode and slower tempo is usually of a lower valence), this model does seem to be a proper choice theoretically.
+Parameters explored across best performing models
 
-## Continued
+:::
 
-This project is in progress. Please refer to the Github repository for the most recent version of the project report.
+Calculating the mean model accuracy across all explored parameters reveals that the logistic and random forest models are also strong choices.
+
+![Performance averaged across all parameters by model](images/table_best_means.png){#fig-best_means width=45% fig-align="center"}
+
+As shown in figure 5, further tuning of the number of randomly selected predictors hyperparameter may be worthwhile to explore for the random forest model. After 10 (mtry = 10), accuracy decreases as the number of randomly selected predictors increases, so the best parameter value appears to be within a range between 0 and 10, but increasing the number of levels could help to narrow in on what that value actually is. For example, model performance could be higher at 8 or 9 randomly selected predictors. 
+
+![Random forest model performance across hyperparameters](images/rf_params_autoplot.png){#fig-rf_params}
+
+Despite this possibility, this project ultimately selects the **neural network model** as the final model. Even though the random forest and logistic models had higher averaged accuracy values, their best performances were still more than one standard deviation away from that of both the neural network and boosted tree models. For behavioral data that is nonlinear and complex, like what makes a song worthwhile for each user to listen to, a neural network model makes for a proper theoretical fit. Neural network models [have likewise been shown](https://aws.amazon.com/what-is/neural-network/#:~:text=Recommendation%20engines) to be well-suited for developing personalized recommendations from user activity. 
+
+## Final Model Analysis
+
+The final neural network model (hidden_units = 5, epochs = 1000, penalty = 1) was fitted to the testing data. The model correctly predicted **88.1%** of user skip behavior for each track, suggesting that the model was a very good fit. 
+
+|       |   no (actual)    |   yes (actual)   |
+|--------------|--------------|--------------|
+|  **no (predicted)**  |  13643  |  1416   |
+|  **yes (predicted)**  |  2569   |  15949  |
+
+: Table 1. Final model performance confusion matrix 
+
+The model predicted more false positives (*N* = 2569) than false negatives (*N* = 1416), suggesting that the model tends to predict that people skip more than they actually do. However, the difference is only by about 5.5%, which is not a significant skew. Overall, this predictive model performs significantly better than mere chance (i.e., 50% accuracy). The neural network model's capacity to process complex, nonlinear data in a way that is inspired by the human brain may have ultimately faciliated the prediction of human behavioral activity like musical preference.
+
+## Conclusion
+
+Given the properties of the songs that a user listens to and information about their listening session, a fairly robust model can be created to predict whether a user will skip a certain song. This model can help to inform music recommendation systems, such that users can be recommended music that they will be less likely to skip. 
+
+Interestingly, an additional exploration modifying the model preprocessing to only include either listening session information (e.g., what context they listened to the song in, how they started a song, what position the song was played in that session) or song properties (e.g., danceability, key, tempo) revealed that the model remains ***equally robust*** without information on song properties, but becomes *little better than mere chance* without information on listening sessions. 
+
+|   song properties only     |  session information only  |
+|----------------------------|----------------------------|
+|  0.526  |  0.879  |
+
+: Table 2. Accuracy of same neural network model modified to include either song properties or session information
+
+These findings highlight the possibility of certain key predictors in the session information data that could have been driving model performance, while simultaneously suggesting the difficulty of predicting skip behavior from song properties alone. Future explorations should investigate specific song properties and specific listening session characteristics that are the most influential for skip behavior. 
+
 
 ## References
 
@@ -114,3 +151,24 @@ Brost, B., Mehrotra, R., & Jehan, T. (2019, May). The music streaming sessions d
 ## Appendix
 
 ### Appendix A: EDA
+![](images/stacked_context.png)
+
+::: {#fig-properties layout-ncol=3}
+
+![Time signature](images/stacked_time_signature.png){#fig-time_signature}
+
+![Key](images/stacked_key.png){#fig-key}
+
+![Major/Minor](images/stacked_mode.png){#fig-mode}
+
+Song properties did not demonstrate differences by skip behavior
+
+:::
+
+::: {layout-ncol=2}
+
+![Skip behavior by time of day](images/plot_hour.png)
+
+![Play behavior by time of day](images/plot_plays.png)
+
+:::
