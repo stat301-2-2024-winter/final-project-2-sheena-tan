@@ -1,0 +1,91 @@
+---
+title: "Executive Summary"
+subtitle: "Project Title: Spotify Sequential Skip Prediction"
+author: "Sheena Tan"
+date: today
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+
+execute:
+  echo: false
+  warning: false
+  
+from: markdown+emoji 
+---
+
+::: {.callout-tip icon=false}
+
+## Github Repo Link
+
+<https://github.com/stat301-2-2024-winter/final-project-2-sheena-tan>
+
+:::
+
+## Introduction
+
+Spotify, an online music streaming platform with over 190 million active users and over 40 million tracks, faces a key challenge: how do you recommend the right music to right user? Out of a robust body of literature on recommendation systems, little work describes how users sequentially interact with recommended content. This gap is particularly evident in the music domain, where understanding when and why users skip tracks serves as crucial implicit feedback. The [Music Streaming Sessions Dataset](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge) was released by Spotify in 2018 to encourage research on this overlooked aspect of streaming. The data set provides information about each user's listening session, including metadata and acoustic descriptors for all tracks encountered. 
+
+This project hopes to provide a solution to Spotify's challenge: **Predict whether individual tracks encountered in a listening session will be skipped by a particular user.**
+
+## Key Findings
+
+Initial data analysis demonstrated correlations between skip behavior and several other listening variables, like the way a track was started (Figure 1). Analysis of the target variable revealed no major issues and proportions of songs skipped or not skipped were approximately even. There was no missingness in any of the variables. ***Overall, initial explorations support the viability of a predictive model.***
+
+![The way a song was started differs by whether or not it was skipped](images/stacked_start.png){#fig-stacked_start}
+
+The following models were tuned and compared using **accuracy** to select a final model:
+
+-   Naive bayes baseline model (`klaR` engine)
+-   Logistic model (`glm` engine)
+-   Neural network model (`nnet` engine)
+    -   Number of hidden units was explored over $[1,10]$ with 5 levels
+    -   Penalty was explored over $[-10,0]$ with 5 levels (on log-10 scale)
+    -   Number of epochs over $[10,1000]$ with 5 levels
+-   K-nearest neighbors model (`kknn` engine)
+    -   Neighbors were explored over $[1,15]$ with 5 levels
+-   Random forest model (`ranger` engine)
+    -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
+    -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
+-   Boosted tree model (`xgboost` engine)
+    -   Number of randomly selected predictors to split on were explored over $[1,47]$ with 5 levels
+    -   Minimum number of data points in a node for splitting were explored over $[2,40]$ with 5 levels
+    -   Learning rate was explored over $[-3,-0.5]$ with 5 levels (on log-10 scale)
+    
+Tuning parameters were compared and a table containing the best performing parameters for each model can be seen below.
+
+![Performance and best parameters across model types](images/table_best_params.png){#fig-best_params width=60% fig-align="center"}
+
+The neural network model (hidden_units = 5, epochs = 1000, penalty = 1) performed the best and was ultimately selected as the final model. For behavioral data that is nonlinear and complex, like what makes a song worthwhile for each user to listen to, a neural network model makes for a proper theoretical fit. Neural network models [have likewise been shown](https://aws.amazon.com/what-is/neural-network/#:~:text=Recommendation%20engines) to be well-suited for developing personalized recommendations from user activity. 
+
+The final neural network model was fitted to the testing data. The model correctly predicted **88.1%** of user skip behavior for each track, suggesting that the model was a very good fit. 
+
+|       |   no (actual)    |   yes (actual)   |
+|--------------|--------------|--------------|
+|  **no (predicted)**  |  13643  |  1416   |
+|  **yes (predicted)**  |  2569   |  15949  |
+
+: Table 1. Final model performance confusion matrix 
+
+Overall, this predictive model performs significantly better than mere chance (i.e., 50% accuracy). The neural network model's capacity to process complex, nonlinear data in a way that is inspired by the human brain may have ultimately facilitated the prediction of human behavioral activity like musical preference.
+
+### Surprises and Future Work
+
+An additional exploration modifying the model to only include either listening session information (e.g., what context they listened to the song in, how they started a song, what position the song was played in that session) or song properties (e.g., danceability, key, tempo) revealed that the model remains ***equally robust*** without information on song properties, but becomes *little better than mere chance* without information on listening sessions. 
+
+|   song properties only     |  session information only  |
+|----------------------------|----------------------------|
+|  0.526  |  0.879  |
+
+: Table 2. Accuracy of same neural network model modified to include either song properties or session information
+
+These findings highlight the possibility of certain key predictors in the session information data that could have been driving model performance, while simultaneously suggesting the difficulty of predicting skip behavior from song properties alone. Future explorations should investigate specific song properties and specific listening session characteristics that are the most influential for skip behavior. 
+
+## Conclusion
+
+Given the properties of the songs that a user listens to and information about their listening session, a fairly robust model can be created to predict whether a user will skip a certain song. This model can help to inform music recommendation systems, such that users can be recommended music that they will be less likely to skip. 
+
+
+

@@ -1,7 +1,6 @@
 ---
 title: "Can Spotify predict if you'll skip a song?"
-subtitle: |
-  | Spotify Sequential Skip Prediction
+subtitle: "Spotify Sequential Skip Prediction"
 author: "Sheena Tan"
 date: today
 
@@ -125,7 +124,7 @@ The final neural network model (hidden_units = 5, epochs = 1000, penalty = 1) wa
 
 : Table 1. Final model performance confusion matrix 
 
-The model predicted more false positives (*N* = 2569) than false negatives (*N* = 1416), suggesting that the model tends to predict that people skip more than they actually do. However, the difference is only by about 5.5%, which is not a significant skew. Overall, this predictive model performs significantly better than mere chance (i.e., 50% accuracy). The neural network model's capacity to process complex, nonlinear data in a way that is inspired by the human brain may have ultimately faciliated the prediction of human behavioral activity like musical preference.
+The model predicted more false positives (*N* = 2569) than false negatives (*N* = 1416), suggesting that the model tends to predict that people skip more than they actually do. However, the difference is only by about 5.5%, which is not a significant skew. Overall, this predictive model performs significantly better than mere chance (i.e., 50% accuracy). The neural network model's capacity to process complex, nonlinear data in a way that is inspired by the human brain may have ultimately facilitated the prediction of human behavioral activity like musical preference.
 
 ## Conclusion
 
